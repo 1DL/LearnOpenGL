@@ -1,13 +1,13 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include <iostream>	
+#include <iostream>
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 
-//settings
+//configuracoes
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
@@ -27,7 +27,7 @@ const char* fragmentShaderSource = "#version 330 core\n"
 
 int main()
 {
-	//glfw:initialize and configure
+	//glfw:inicialização e configuração
 	//----------------------------
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -37,7 +37,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	// glfw window creation
+	// glfw criação da janela
 	// --------------------
 	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
@@ -49,7 +49,7 @@ int main()
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-	// glad: load all OpenGL function pointers
+	// glad: carrega todos os ponteiros de funções do OpenGL
 	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -57,14 +57,14 @@ int main()
 		return -1;
 	}
 
-	// build and compile our shader program
+	// builda e compila os programas de shaders
 	// ------------------------------------
 	// vertex shader
 
 	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
 	glCompileShader(vertexShader);
-	// check for shader compile errors
+	// verifica se houve problemas na compilação do shader
 	int success;
 	char infoLog[512];
 	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -77,7 +77,7 @@ int main()
 	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
 	glCompileShader(fragmentShader);
-	// check for shader compile errors
+	// verifica se houve problemas na compilação do shader
 	glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
 	if (!success)
 	{
@@ -89,7 +89,7 @@ int main()
 	glAttachShader(shaderProgram, vertexShader);
 	glAttachShader(shaderProgram, fragmentShader);
 	glLinkProgram(shaderProgram);
-	// check for linking errors
+	// verifica se houve problemas ao linkar os shaders
 	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
 	if (!success)
 	{
@@ -99,35 +99,47 @@ int main()
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	// set up vertex data (and buffer(s)) and configure vertex attributes
+	// define os dados de vértices (vertex data) e os buffers de vertices e configura os atributos de vertices (vertex attributes)
 	// ------------------------------------------------------------------
 	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		 0.5f, -0.5f, 0.0f,
-		 0.0f,  0.5f, 0.0f,
+		 0.5f,  0.5f, 0.0f,  // cima direita 
+		 0.5f, -0.5f, 0.0f,  // baixo direita
+		-0.5f, -0.5f, 0.0f,  // baixo esquerda
+		-0.5f,  0.5f, 0.0f   // cima esquerda
+	};
+	unsigned int indices[] = {	//começa do 0
+		0,1,3,					//primeiro triangulo
+		1,2,3					//segundo triangulo
 	};
 	
 	unsigned int VAO;
 	unsigned int VBO;
+	unsigned int EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
-	// bind the Vertex Array Object first, then bind and set vertex buffer(s), and then configure vertex attributes(s).
+	glGenBuffers(1, &EBO);
+	// vincula primeiro o objeto array de vértices primeiro (VAO - Vertex Array Object), então vincula e seta os buffers de vértices (Vertex buffers)
+	// e então configura os atributos das vértices (vertex attributes);
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
+	//Isto é permitido, porque a chamada para glVertexAttribPointer restriou VBO como os atributos de vértices vinculados ao objeto buffer de vértices, então podemos desvincular depois
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	// You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
-	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+	// Podemos desvincular o VAO depois para que chamadas par aoutros VAOs não vão modificar este VAO atual, mas isto acontece raramente.
+	// Modificar outros VAOs requer chamar a função glBindVertexArray de qualquer forma, então geralmente não desvinculamos VAOs nem VBOs quando 
+	// não é diretamente necessário.
 	glBindVertexArray(0);
 
-	// uncomment this call to draw in wireframe polygons.
+	// descomentar para renderizar os poligonos no modo wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 	// render loop
@@ -143,25 +155,26 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//draw our first triangle
+		//desenha o o primeiro triangulo
 		glUseProgram(shaderProgram);
-		glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
-		glDrawArrays(GL_TRIANGLES, 0, 3);
-		// glBindVertexArray(0); // no need to unbind it every time 
+		glBindVertexArray(VAO); // como só temos um VAO, não é necessário vincular ele o tempo todo. Mas iremos fazer para deixar organizado
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+		// glBindVertexArray(0); // não é necessário desvincular o tempo todo
 
-		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+		// glfw: troca os buffers (back e front do double buffering) e faz polling dos eventos de IO (teclas pressionadas e soltas, movimento de mouse, etc)
 		// -------------------------------------------------------------------------------
 		glfwPollEvents();
 		glfwSwapBuffers(window);
 	}
 
-	// optional: de-allocate all resources once they've outlived their purpose:
+	// Opcional: desaloca todos os recursos assim que eles já viveram além do seu propósito:
 	// ------------------------------------------------------------------------
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
+	glDeleteBuffers(1, &EBO);
 	glDeleteProgram(shaderProgram);
 
-	// glfw: terminate, clearing all previously allocated GLFW resources.
+	// glfw: terminate, limpando e desalocando todos os recursos alocados anteriormente pelo GLFW.
 	// ------------------------------------------------------------------
 	glfwTerminate();
 	return 0;
