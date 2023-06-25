@@ -2,6 +2,9 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <iostream>
 
@@ -60,11 +63,11 @@ int main()
 	// define os dados de vértices (vertex data) e os buffers de vertices e configura os atributos de vertices (vertex attributes)
 	// ------------------------------------------------------------------
 	float vertices[] = {
-		// positions          // colors           // texture coords
-		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
-		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+		// positions          // texture coords
+		 0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+		 0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+		-0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left 
 	};
 	unsigned int indices[] = {	//começa do 0
 		0,1,3,					//primeiro triangulo
@@ -87,19 +90,19 @@ int main()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3* sizeof(float)));
+	// texture coord attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
 
 
 	// define as texturas
-	unsigned int textures[2];
-	glGenTextures(2, textures);
+	unsigned int texture1, texture2;
+	glGenTextures(1, &texture1);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
+	glBindTexture(GL_TEXTURE_2D, texture1);
 	// define as opções de filtro e repetição para a textura vinculada atualmente ao objeto
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -120,8 +123,9 @@ int main()
 	}
 	stbi_image_free(data);
 
+	glGenTextures(1, &texture2);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, textures[1]);
+	glBindTexture(GL_TEXTURE_2D, texture2);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -138,10 +142,11 @@ int main()
 	}
 	stbi_image_free(data);
 
-
-	// descomentar para renderizar os poligonos no modo wireframe
-	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+	// Diz pro opengl em cada sampler qual texture unit ele pertence (só precisa ser feito 1x)
+	// ---------------------------------------------------------------------------------------
+	ourShader.use();
+	ourShader.setInt("texture1", 0);
+	ourShader.setInt("texture2", 1);
 
 
 	// render loop
@@ -157,19 +162,25 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		ourShader.use();
-		glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
-		ourShader.setInt("texture2", 1);
-		ourShader.setFloat("mixValue", mixValue);
-
 		//vincula texturas ao texture unit correspondente
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, textures[0]);
+		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, textures[1]);
+		glBindTexture(GL_TEXTURE_2D, texture2);
+		
+		//cria transformações
+		glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+		transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+		transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		//obtem a localização do uniform da matriz e define ela
+		ourShader.use();
+		ourShader.setMat4("transform", transform);
+		//unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+		//glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+		ourShader.setFloat("mixValue", mixValue);
 
 		// renderiza o container
-		ourShader.use();
 		glBindVertexArray(VAO); // como só temos um VAO, não é necessário vincular ele o tempo todo. Mas iremos fazer para deixar organizado
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
