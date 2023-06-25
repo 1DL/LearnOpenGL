@@ -15,6 +15,9 @@ void processInput(GLFWwindow* window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+//armazena o quanto queremos ver entre as texturas
+float mixValue{0.2f};
+
 int main()
 {
 	//glfw:inicialização e configuração
@@ -140,9 +143,6 @@ int main()
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 
-	ourShader.use();
-	glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
-	ourShader.setInt("texture2", 1);
 
 	// render loop
 	// -----------
@@ -156,6 +156,11 @@ int main()
 		// ------
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		ourShader.use();
+		glUniform1i(glGetUniformLocation(ourShader.ID, "texture1"), 0);
+		ourShader.setInt("texture2", 1);
+		ourShader.setFloat("mixValue", mixValue);
 
 		//vincula texturas ao texture unit correspondente
 		glActiveTexture(GL_TEXTURE0);
@@ -192,6 +197,19 @@ void processInput(GLFWwindow* window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+		mixValue += 0.01f;
+		if (mixValue > 1.0f)
+			mixValue = 1.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+		mixValue -= 0.01f;
+		if (mixValue < 0.0f)
+			mixValue = 0.0f;
+	}
+
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
