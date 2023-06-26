@@ -20,6 +20,9 @@ const unsigned int SCR_HEIGHT = 600;
 
 //armazena o quanto queremos ver entre as texturas
 float mixValue{0.2f};
+float fov{ 45.5f };
+float pos_x{ 0.0f };
+float pos_y{ 0.0f };
 
 int main()
 {
@@ -222,9 +225,9 @@ int main()
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
 		glm::mat4 view = glm::mat4(1.0f);
-		view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+		view = glm::translate(view, glm::vec3(pos_x, pos_y, -3.0f));
 		glm::mat4 projection;
-		projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+		projection = glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
 
 		//obtem a localização do uniform da matriz e define ela
 		ourShader.use();
@@ -243,6 +246,8 @@ int main()
 		// -------------------------------------------------------------------------------
 		glfwPollEvents();
 		glfwSwapBuffers(window);
+
+		std::cout << "FOV: " << fov << " blend: " << mixValue << " pos_x: " << pos_x << " pos_y: " << pos_y << '\n';
 	}
 
 	// Opcional: desaloca todos os recursos assim que eles já viveram além do seu propósito:
@@ -274,6 +279,48 @@ void processInput(GLFWwindow* window)
 		mixValue -= 0.01f;
 		if (mixValue < 0.0f)
 			mixValue = 0.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		fov += 0.1f;
+		if (fov > 1000.0f)
+			fov = 1000.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+		fov -= 0.1f;
+		if (fov < -1000.0f)
+			fov = -1000.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+		fov += 0.1f;
+		if (fov > 1000.0f)
+			fov = 1000.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		pos_y += 0.01f;
+		if (pos_y > 1000.0f)
+			pos_y = 1000.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		pos_y -= 0.01f;
+		if (pos_y < -1000.0f)
+			pos_y = -1000.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		pos_x += 0.01f;
+		if (pos_x > 1000.0f)
+			pos_x = 1000.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		pos_x -= 0.01f;
+		if (pos_x < -1000.0f)
+			pos_x = -1000.0f;
 	}
 
 }
