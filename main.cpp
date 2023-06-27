@@ -20,6 +20,15 @@ const unsigned int SCR_HEIGHT = 600;
 
 //armazena o quanto queremos ver entre as texturas
 float mixValue{0.2f};
+//sistema de camera
+glm::vec3 cameraPos		= glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront	= glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp		= glm::vec3(0.0f, 1.0f, 0.0f);
+
+//timming
+float deltaTime = 0.0f;	// tempo entre o frame atual e ultimo frame
+float lastFrame = 0.0f;
+
 float fov{ 45.5f };
 float pos_x{ 0.0f };
 float pos_y{ 0.0f };
@@ -222,6 +231,13 @@ int main()
 	// -----------
 	while (!glfwWindowShouldClose(window))
 	{
+		// logica de timming por frame
+		//------
+		float currentFrame = static_cast<float>(glfwGetTime());
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+
+
 		// input
 		// -----
 		processInput(window);
@@ -242,10 +258,7 @@ int main()
 		
 		//transformações de camera/view
 		glm::mat4 view = glm::mat4(1.0f);	// matriz precisa ser inicializada como identidade
-		float radius = 10.0f;
-		float camX = static_cast<float>(sin(glfwGetTime()) * radius);
-		float camZ = static_cast<float>(cos(glfwGetTime()) * radius);
-		view = glm::lookAt(glm::vec3(camX, 0.0f, camZ), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
 		ourShader.setMat4("view", view);
 		ourShader.setFloat("mixValue", mixValue);
 
@@ -320,29 +333,15 @@ void processInput(GLFWwindow* window)
 			fov = 1000.0f;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-		pos_y += 0.01f;
-		if (pos_y > 1000.0f)
-			pos_y = 1000.0f;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-		pos_y -= 0.01f;
-		if (pos_y < -1000.0f)
-			pos_y = -1000.0f;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-		pos_x += 0.01f;
-		if (pos_x > 1000.0f)
-			pos_x = 1000.0f;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-		pos_x -= 0.01f;
-		if (pos_x < -1000.0f)
-			pos_x = -1000.0f;
-	}
+	const float cameraSpeed = static_cast<float>(2.5 * deltaTime); // velocidade de movimento da camera
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		cameraPos += cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		cameraPos -= cameraSpeed * cameraFront;
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 
 }
 
