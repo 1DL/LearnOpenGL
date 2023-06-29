@@ -12,11 +12,13 @@
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
 //configuracoes
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+const unsigned int SCR_WIDTH = 800U;
+const unsigned int SCR_HEIGHT = 600U;
 
 //armazena o quanto queremos ver entre as texturas
 float mixValue{0.2f};
@@ -25,13 +27,23 @@ glm::vec3 cameraPos		= glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront	= glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp		= glm::vec3(0.0f, 1.0f, 0.0f);
 
-//timming
-float deltaTime = 0.0f;	// tempo entre o frame atual e ultimo frame
-float lastFrame = 0.0f;
+bool firstMouse = true;	 // usado para verificar se foi o primeiro movimento do mouse, evitando uma mudança brusca de local da camera
+float yaw = -90.0f;			// gira no eixo x
+float pitch = 0.0f;			// gira no eixo y
+float roll = 0.0f;			// gira no eixo z
 
-float fov{ 45.5f };
+// controla o zoom e posição da camera
+float fov{ 45.0f };
 float pos_x{ 0.0f };
 float pos_y{ 0.0f };
+
+// diferença de movimento do mouse em cada eixo desde o ultimo frame
+float lastX{ SCR_WIDTH / 2 };
+float lastY{ SCR_HEIGHT / 2 };
+
+//timming
+float deltaTime{};	// tempo entre o frame atual e ultimo frame
+float lastFrame{};
 
 int main()
 {
@@ -56,6 +68,11 @@ int main()
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+	//informa o glfw para capturar o mouse no centro da tela, nao podendo escapar, estilo jogo FPS
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	// glad: carrega todos os ponteiros de funções do OpenGL
 	// ---------------------------------------
@@ -223,17 +240,16 @@ int main()
 	ourShader.setInt("texture1", 0);
 	ourShader.setInt("texture2", 1);
 
-	//Passa matriz de projeção aos shaders (como elas quase nunca mudam, não precisam ser passadas a cada frame no render loop
-	glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.f);
-	ourShader.setMat4("projection", projection);
-
+	
 	// render loop
 	// -----------
+	//int frameCount{};
+	float currentFrame{};
 	while (!glfwWindowShouldClose(window))
 	{
 		// logica de timming por frame
 		//------
-		float currentFrame = static_cast<float>(glfwGetTime());
+		currentFrame = static_cast<float>(glfwGetTime());
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
@@ -256,9 +272,15 @@ int main()
 		//Ativa o shader
 		ourShader.use();
 		
+		//Passa matriz de projeção aos shaders
+		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.f);
+		ourShader.setMat4("projection", projection);
+
+
 		//transformações de camera/view
 		glm::mat4 view = glm::mat4(1.0f);	// matriz precisa ser inicializada como identidade
 		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
 		ourShader.setMat4("view", view);
 		ourShader.setFloat("mixValue", mixValue);
 
@@ -278,10 +300,10 @@ int main()
 		}
 		// glfw: troca os buffers (back e front do double buffering) e faz polling dos eventos de IO (teclas pressionadas e soltas, movimento de mouse, etc)
 		// -------------------------------------------------------------------------------
-		glfwPollEvents();
 		glfwSwapBuffers(window);
+		glfwPollEvents();
 
-		std::cout << "FOV: " << fov << " blend: " << mixValue << " pos_x: " << pos_x << " pos_y: " << pos_y << '\n';
+		//std::cout << "FOV: " << fov << " blend: " << mixValue << " pos_x: " << pos_x << " pos_y: " << pos_y << '\n';
 	}
 
 	// Opcional: desaloca todos os recursos assim que eles já viveram além do seu propósito:
@@ -333,7 +355,7 @@ void processInput(GLFWwindow* window)
 			fov = 1000.0f;
 	}
 
-	const float cameraSpeed = static_cast<float>(2.5 * deltaTime); // velocidade de movimento da camera
+	const float cameraSpeed = static_cast<float>(2.5f * deltaTime); // velocidade de movimento da camera
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		cameraPos += cameraSpeed * cameraFront;
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -352,4 +374,49 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on retina displays.
 	glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+{
+	float xpos = static_cast<float>(xposIn);
+	float ypos = static_cast<float>(yposIn);
+
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset{ xpos - lastX };
+	float yoffset{ lastY - ypos }; // revertido porque as cordenadas y no espaço 3d é de baixo pra cima, já na tela, é de cima para baixo
+	lastX = xpos;
+	lastY = ypos;
+
+	const float sensitivity = 0.1f;
+	xoffset *= sensitivity;
+	yoffset *= sensitivity;
+
+	yaw		+= xoffset;
+	pitch	+= yoffset;
+
+	if (pitch > 89.9f)
+		pitch = 89.9f;
+	if (pitch < -89.9f)
+		pitch = -89.9f;
+
+	glm::vec3 front;
+	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+	front.y = sin(glm::radians(pitch));
+	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	cameraFront = glm::normalize(front);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	fov -= (float)yoffset;
+	if (fov < 1.0f)
+		fov = 1.0f;
+	if (fov > 45.f)
+		fov = 45.0f;
 }
