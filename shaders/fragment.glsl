@@ -10,5 +10,6 @@ uniform float mixValue;
 
 void main()
 {
+	// interpola de forma linear entre cada textura (usando mixvalue)
 	FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), mixValue);
 }

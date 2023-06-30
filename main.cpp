@@ -1,14 +1,17 @@
-#include "Shader.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "stb_image.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Shader.h"
+#include "Camera.h"
+
 #include <iostream>
 
-#include "stb_image.h"
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -17,33 +20,21 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 
 //configuracoes
-const unsigned int SCR_WIDTH = 800U;
-const unsigned int SCR_HEIGHT = 600U;
+const unsigned int SCR_WIDTH{ 800U };
+const unsigned int SCR_HEIGHT{ 600U };
 
 //armazena o quanto queremos ver entre as texturas
 float mixValue{0.2f};
 //sistema de camera
-glm::vec3 cameraPos		= glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront	= glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp		= glm::vec3(0.0f, 1.0f, 0.0f);
-
-bool firstMouse = true;	 // usado para verificar se foi o primeiro movimento do mouse, evitando uma mudança brusca de local da camera
-float yaw = -90.0f;			// gira no eixo x
-float pitch = 0.0f;			// gira no eixo y
-float roll = 0.0f;			// gira no eixo z
-
-// controla o zoom e posição da camera
-float fov{ 45.0f };
-float pos_x{ 0.0f };
-float pos_y{ 0.0f };
-
+Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 // diferença de movimento do mouse em cada eixo desde o ultimo frame
-float lastX{ SCR_WIDTH / 2 };
-float lastY{ SCR_HEIGHT / 2 };
+float lastX{ SCR_WIDTH / 2.0f };
+float lastY{SCR_HEIGHT / 2.0f};
+bool firstMouse{ true };				// usado para verificar se foi o primeiro movimento do mouse, evitando uma mudança brusca de local da camera
 
 //timming
-float deltaTime{};	// tempo entre o frame atual e ultimo frame
-float lastFrame{};
+float deltaTime{0.0f};	// tempo entre o frame atual e ultimo frame
+float lastFrame{0.0f};
 
 int main()
 {
@@ -59,7 +50,7 @@ int main()
 
 	// glfw criação da janela
 	// --------------------
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL with DL", NULL, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window\n";
@@ -147,7 +138,7 @@ int main()
 		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 	};
-	// world space positions of our cubes
+	// world space - posicoes dos cubos
 	glm::vec3 cubePositions[] = {
 		glm::vec3(0.0f,  0.0f,  0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
@@ -161,10 +152,10 @@ int main()
 		glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
-	unsigned int indices[] = {	//começa do 0
-		0,1,3,					//primeiro triangulo
-		1,2,3					//segundo triangulo
-	};
+	//unsigned int indices[] = {	//começa do 0
+	//	0,1,3,					//primeiro triangulo
+	//	1,2,3					//segundo triangulo
+	//};
 	
 	unsigned int VAO;
 	unsigned int VBO;
@@ -198,11 +189,12 @@ int main()
 	// define as opções de filtro e repetição para a textura vinculada atualmente ao objeto
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	// carrega e gera a textura
 	int width, height, nrChannels;
-	stbi_set_flip_vertically_on_load(true);
+	// informa o stb_image.h para inverter a textura no eixo Y (vertical)
+	stbi_set_flip_vertically_on_load(true);	
 	unsigned char* data = stbi_load("textures/container.jpg", &width, &height, &nrChannels, 0);
 	if (data)
 	{
@@ -220,7 +212,7 @@ int main()
 	glBindTexture(GL_TEXTURE_2D, texture2);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	data = stbi_load("textures/awesomeface.png", &width, &height, &nrChannels, 0);
 	if (data)
@@ -271,19 +263,15 @@ int main()
 
 		//Ativa o shader
 		ourShader.use();
+		ourShader.setFloat("mixValue", mixValue);
 		
 		//Passa matriz de projeção aos shaders
-		glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.f);
+		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.f);
 		ourShader.setMat4("projection", projection);
 
-
 		//transformações de camera/view
-		glm::mat4 view = glm::mat4(1.0f);	// matriz precisa ser inicializada como identidade
-		view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-
+		glm::mat4 view = camera.GetViewMatrix();	
 		ourShader.setMat4("view", view);
-		ourShader.setFloat("mixValue", mixValue);
-
 
 		glBindVertexArray(VAO); // como só temos um VAO, não é necessário vincular ele o tempo todo. Mas iremos fazer para deixar organizado
 		//Renderiza as caixas
@@ -337,33 +325,14 @@ void processInput(GLFWwindow* window)
 			mixValue = 0.0f;
 	}
 
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		fov += 0.1f;
-		if (fov > 1000.0f)
-			fov = 1000.0f;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
-		fov -= 0.1f;
-		if (fov < -1000.0f)
-			fov = -1000.0f;
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
-		fov += 0.1f;
-		if (fov > 1000.0f)
-			fov = 1000.0f;
-	}
-
-	const float cameraSpeed = static_cast<float>(2.5f * deltaTime); // velocidade de movimento da camera
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		cameraPos += cameraSpeed * cameraFront;
+		camera.ProcessKeyboard(FORWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		cameraPos -= cameraSpeed * cameraFront;
+		camera.ProcessKeyboard(BACKWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		camera.ProcessKeyboard(RIGHT, deltaTime);
 
 }
 
@@ -393,30 +362,10 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 	lastX = xpos;
 	lastY = ypos;
 
-	const float sensitivity = 0.1f;
-	xoffset *= sensitivity;
-	yoffset *= sensitivity;
-
-	yaw		+= xoffset;
-	pitch	+= yoffset;
-
-	if (pitch > 89.9f)
-		pitch = 89.9f;
-	if (pitch < -89.9f)
-		pitch = -89.9f;
-
-	glm::vec3 front;
-	front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-	front.y = sin(glm::radians(pitch));
-	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-	cameraFront = glm::normalize(front);
+	camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	fov -= (float)yoffset;
-	if (fov < 1.0f)
-		fov = 1.0f;
-	if (fov > 45.f)
-		fov = 45.0f;
+	camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
