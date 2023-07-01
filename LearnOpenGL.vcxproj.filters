@@ -21,22 +21,31 @@
     <ClCompile Include="..\..\..\Users\Luiz\Downloads\glad\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Shader.cpp">
+    <ClCompile Include="includes\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stb_image.cpp">
+    <ClCompile Include="includes\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
+    <ClCompile Include="includes\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Shader.h">
+    <ClInclude Include="includes\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
+    <ClInclude Include="includes\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="includes\stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\vertex_light_cube.glsl" />
+    <Text Include="shaders\fragment_light_cube.glsl" />
+    <Text Include="shaders\fragment.glsl" />
+    <Text Include="shaders\vertex.glsl" />
   </ItemGroup>
 </Project>

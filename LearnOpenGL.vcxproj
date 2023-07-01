@@ -146,14 +146,21 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Users\Luiz\Downloads\glad\src\glad.c" />
+    <ClCompile Include="includes\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="stb_image.cpp" />
+    <ClCompile Include="includes\Shader.cpp" />
+    <ClCompile Include="includes\Camera.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="Shader.h" />
+    <ClInclude Include="includes\Camera.h" />
+    <ClInclude Include="includes\stb_image.h" />
+    <ClInclude Include="includes\Shader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="shaders\fragment_light_cube.glsl" />
+    <Text Include="shaders\fragment.glsl" />
+    <Text Include="shaders\vertex.glsl" />
+    <Text Include="shaders\vertex_light_cube.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
