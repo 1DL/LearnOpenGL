@@ -21,12 +21,6 @@
     <ClCompile Include="..\..\..\Users\Luiz\Downloads\glad\src\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="includes\Shader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="includes\Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="includes\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -47,5 +41,7 @@
     <Text Include="shaders\fragment_light_cube.glsl" />
     <Text Include="shaders\fragment.glsl" />
     <Text Include="shaders\vertex.glsl" />
+    <Text Include="shaders\vertex_goraud.glsl" />
+    <Text Include="shaders\fragment_goraud.glsl" />
   </ItemGroup>
 </Project>

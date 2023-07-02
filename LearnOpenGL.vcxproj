@@ -108,7 +108,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
@@ -125,7 +125,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
+      <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
@@ -148,8 +148,6 @@
     <ClCompile Include="..\..\..\Users\Luiz\Downloads\glad\src\glad.c" />
     <ClCompile Include="includes\stb_image.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="includes\Shader.cpp" />
-    <ClCompile Include="includes\Camera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="includes\Camera.h" />
@@ -159,6 +157,8 @@
   <ItemGroup>
     <Text Include="shaders\fragment_light_cube.glsl" />
     <Text Include="shaders\fragment.glsl" />
+    <Text Include="shaders\fragment_goraud.glsl" />
+    <Text Include="shaders\vertex_goraud.glsl" />
     <Text Include="shaders\vertex.glsl" />
     <Text Include="shaders\vertex_light_cube.glsl" />
   </ItemGroup>
