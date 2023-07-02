@@ -32,6 +32,7 @@ float lastFrame = 0.0f;
 
 // lighting
 glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
+glm::vec3 lightColor(1.0f, 1.0f, 1.0f);
 
 bool useGoraud = false;
 
@@ -186,7 +187,6 @@ int main()
 		(useGoraud) ? activeShader = &goraudShader : activeShader = &lightingShader;
 		activeShader->use();
 
-		glm::vec3 lightColor;
 		lightColor.x = sin(glfwGetTime() * 2.0f);
 		lightColor.y = sin(glfwGetTime() * 0.7f);
 		lightColor.z = sin(glfwGetTime() * 1.3f);
@@ -199,13 +199,13 @@ int main()
 		activeShader->setVec3("light.diffuse", diffuseColor);
 		activeShader->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
-		activeShader->setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-		activeShader->setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
-		activeShader->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
-		activeShader->setFloat("material.shininess", 32.0f);
+		lightingShader.setVec3("material.ambient", 0.0f, 0.1f, 0.06f);
+		lightingShader.setVec3("material.diffuse", 0.0f, 0.50980392f, 0.50980392f);
+		lightingShader.setVec3("material.specular", 0.50196078f, 0.50196078f, 0.50196078f);
+		lightingShader.setFloat("material.shininess", 32.0f);
 
 		activeShader->setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-		activeShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+		activeShader->setVec3("lightColor", lightColor);
 		activeShader->setVec3("lightPos", lightPos);
 		activeShader->setVec3("viewPos", camera.Position);
 
@@ -226,6 +226,7 @@ int main()
 
 		// also draw the lamp object
 		lightCubeShader.use();
+		lightCubeShader.setVec3("lightColor", lightColor);
 		lightCubeShader.setMat4("projection", projection);
 		lightCubeShader.setMat4("view", view);
 		model = glm::mat4(1.0f);
