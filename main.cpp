@@ -170,11 +170,13 @@ int main()
 	// load textures
 	unsigned int diffuseMap = loadTexture("textures/container2.png");
 	unsigned int specularMap = loadTexture("textures/container2_specular.png");
+	unsigned int emissionMap = loadTexture("textures/matrix.jpg");
 
 	//shader config
 	activeShader->use();
 	activeShader->setInt("material.diffuse", 0);
 	activeShader->setInt("material.specular", 1);
+	activeShader->setInt("material.emission", 2);
 
 	// render loop
 	// -----------
@@ -227,6 +229,10 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, diffuseMap);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, specularMap);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, emissionMap);
+
+		activeShader->setFloat("time", static_cast<float>(glfwGetTime()));
 
 		// render the cube
 		glBindVertexArray(cubeVAO);
