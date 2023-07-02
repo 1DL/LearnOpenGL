@@ -44,4 +44,18 @@
     <Text Include="shaders\vertex_goraud.glsl" />
     <Text Include="shaders\fragment_goraud.glsl" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="textures\container2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\awesomeface.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\container.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="textures\container2_specular.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
 </Project>
