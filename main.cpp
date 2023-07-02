@@ -186,10 +186,23 @@ int main()
 		(useGoraud) ? activeShader = &goraudShader : activeShader = &lightingShader;
 		activeShader->use();
 
+		glm::vec3 lightColor;
+		lightColor.x = sin(glfwGetTime() * 2.0f);
+		lightColor.y = sin(glfwGetTime() * 0.7f);
+		lightColor.z = sin(glfwGetTime() * 1.3f);
 
-		lightPos.x = cos(glfwGetTime());
-		lightPos.y = sin(glfwGetTime());
-		lightPos.z = cos(glfwGetTime());
+		glm::vec3 diffuseColor = lightColor * glm::vec3(0.5f);
+		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+
+
+		activeShader->setVec3("light.ambient", ambientColor);
+		activeShader->setVec3("light.diffuse", diffuseColor);
+		activeShader->setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+
+		activeShader->setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
+		activeShader->setVec3("material.diffuse", 1.0f, 0.5f, 0.31f);
+		activeShader->setVec3("material.specular", 0.5f, 0.5f, 0.5f);
+		activeShader->setFloat("material.shininess", 32.0f);
 
 		activeShader->setVec3("objectColor", 1.0f, 0.5f, 0.31f);
 		activeShader->setVec3("lightColor", 1.0f, 1.0f, 1.0f);
@@ -257,6 +270,19 @@ void processInput(GLFWwindow* window)
 		camera.ProcessKeyboard(LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 		camera.ProcessKeyboard(RIGHT, deltaTime);
+
+	if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+		lightPos.y += deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+		lightPos.y -= deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+		lightPos.x -= deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+		lightPos.x += deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_KP_8) == GLFW_PRESS)
+		lightPos.z += deltaTime;
+	if (glfwGetKey(window, GLFW_KEY_KP_2) == GLFW_PRESS)
+		lightPos.z -= deltaTime;
 
 	if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
 	{
